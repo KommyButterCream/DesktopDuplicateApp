@@ -3,7 +3,10 @@
 #pragma comment(lib, "ole32.lib") // for CoInitializeEx, CoUninitialize
 
 #include <stdio.h>
+
 #include "DesktopDuplicateApp.h"
+
+#include "../../../Module/Core/DirectX/DxDebugUtils.h"
 
 static DesktopDuplicateApp* g_appInstance = nullptr;
 
@@ -49,7 +52,7 @@ int main()
 	g_appInstance = nullptr;
 
 #if defined(_DEBUG)
-	ReportLiveObjects();
+	Core::DirectX::DxReportLiveObjects();
 #endif
 
 	::CoUninitialize();

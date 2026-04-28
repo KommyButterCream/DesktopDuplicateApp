@@ -7,8 +7,6 @@
 #include <iostream>
 #include <conio.h>
 
-#include "DebugUtils.h"
-
 #include "../../../Module/D3D11DuplicateEngine/D3D11DuplicateEngine/D3D11DuplicateEngine.h"
 #include "../../../Module/D3D11DuplicateEngine/D3D11DuplicateEngine/CommonTypes.h"
 #include "../../../Module/D3D11ImageView/D3D11ImageView/D3D11ImageView.h"
