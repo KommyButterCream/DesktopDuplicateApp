@@ -161,7 +161,7 @@ private:
 
 		if (m_callbackContext.captureFrame)
 		{
-			ID3D11Texture2D* bgraTexture = m_callbackContext.captureFrame->frame;
+			ID3D11Texture2D* bgraTexture = m_callbackContext.captureFrame->texture;
 			(void)bgraTexture;
 
 			// NVENC Encode (h264)
