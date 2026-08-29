@@ -41,18 +41,19 @@ public:
 			return false;
 		}
 
-		m_callbackContext.sharedData = &m_sharedData;
-		m_callbackContext.ownerData = this;
-		m_callbackContext.imageView = m_imageView;
-		m_callbackContext.D3D11Device = m_imageView->GetDevice();
-
-		if (!m_duplicateEngine->Initialize(0))
+		if (!m_duplicateEngine->SetCaptureOutputMode(CaptureOutputMode::SharedTexture))
 		{
 			Shutdown();
 			return false;
 		}
 
-		m_duplicateEngine->SetFrameCaptureCallback(FrameCallbackThunk, &m_callbackContext);
+		if (!m_duplicateEngine->Initialize())
+		{
+			Shutdown();
+			return false;
+		}
+
+		m_duplicateEngine->SetFrameCaptureCallback(FrameCallbackThunk, this);
 
 		if (!m_duplicateEngine->StartThread())
 		{
@@ -115,36 +116,18 @@ public:
 			m_duplicateEngine = nullptr;
 		}
 
-		if (m_callbackContext.opendTexture)
-		{
-			m_callbackContext.opendTexture->Release();
-			m_callbackContext.opendTexture = nullptr;
-		}
-
-		if (m_callbackContext.stagingTex)
-		{
-			m_callbackContext.stagingTex->Release();
-			m_callbackContext.stagingTex = nullptr;
-		}
-
 		if (m_imageView)
 		{
 			delete m_imageView;
 			m_imageView = nullptr;
 		}
 
-		ZeroMemory(&m_sharedData, sizeof(m_sharedData));
-		ZeroMemory(&m_callbackContext, sizeof(m_callbackContext));
 	}
 
 private:
 	static void FrameCallbackThunk(void* userData)
 	{
-		CaptureCallbackContext* context = static_cast<CaptureCallbackContext*>(userData);
-		if (!context)
-			return;
-
-		DesktopDuplicateApp* self = static_cast<DesktopDuplicateApp*>(context->ownerData);
+		DesktopDuplicateApp* self = static_cast<DesktopDuplicateApp*>(userData);
 		if (self)
 		{
 			self->OnFrameCallback();
@@ -153,36 +136,18 @@ private:
 
 	void OnFrameCallback()
 	{
-		if (!m_callbackContext.sharedData || !m_callbackContext.imageView)
+		if (!m_imageView || !m_duplicateEngine)
 			return;
 
-		HANDLE currentHandle = nullptr;
-		bool hasNewFrame = false;
-
-		if (m_callbackContext.captureFrame)
+		HANDLE sharedHandle = m_duplicateEngine->GetSharedTextureHandle();
+		if (sharedHandle)
 		{
-			ID3D11Texture2D* bgraTexture = m_callbackContext.captureFrame->texture;
-			(void)bgraTexture;
-
-			// NVENC Encode (h264)
-		}
-
-		::AcquireSRWLockExclusive(&m_callbackContext.sharedData->lock);
-		currentHandle = m_callbackContext.sharedData->sharedHandle;
-		hasNewFrame = m_callbackContext.sharedData->newFrame;
-		m_callbackContext.sharedData->newFrame = false;
-		::ReleaseSRWLockExclusive(&m_callbackContext.sharedData->lock);
-
-		if (hasNewFrame && currentHandle)
-		{
-			m_callbackContext.imageView->UpdateSharedTexture(currentHandle);
+			m_imageView->UpdateSharedTexture(sharedHandle);
 		}
 	}
 
 private:
 	bool m_running = false;
-	SharedCaptureData m_sharedData = {};
-	CaptureCallbackContext m_callbackContext = {};
 	D3D11DuplicateEngine* m_duplicateEngine = nullptr;
 	D3D11ImageView* m_imageView = nullptr;
 };
