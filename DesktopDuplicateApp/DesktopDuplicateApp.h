@@ -41,7 +41,11 @@ public:
 			return false;
 		}
 
-		if (!m_duplicateEngine->SetCaptureOutputMode(CaptureOutputMode::SharedTexture))
+		// Capture and ImageView own different D3D11 devices and immediate
+		// contexts. Each context is used by only its own thread, while keyed
+		// mutex synchronization protects the shared texture across devices.
+		if (!m_duplicateEngine->SetImmediateContextGateEnabled(false) ||
+			!m_duplicateEngine->SetCaptureOutputMode(CaptureOutputMode::SharedTexture))
 		{
 			Shutdown();
 			return false;
